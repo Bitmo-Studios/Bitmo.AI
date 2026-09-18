@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitmo AI Launcher</title>
+    
+    <!-- PyScript Engine -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: #0d0e12;
+            color: #FFFFFF;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(30, 31, 32, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 36px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 { color: #A8C7FA; font-size: 2rem; margin-bottom: 12px; }
+        p { color: #E2E8F0; font-size: 0.95rem; margin-bottom: 24px; }
+        
+        .btn-run {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #A8C7FA, #7CACC5);
+            color: #001D3D;
+            padding: 16px 32px;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(168, 199, 250, 0.4);
+            transition: all 0.25s ease;
+        }
+        .btn-run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 28px rgba(168, 199, 250, 0.6);
+        }
+
+        #chat-container {
+            display: none;
+            margin-top: 25px;
+            text-align: left;
+            background: #1E1F20;
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #chat-box {
+            height: 250px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        .msg { margin-bottom: 10px; padding: 8px 12px; border-radius: 10px; }
+        .msg.user { background: #2B2C2E; color: #FFFFFF; text-align: right; }
+        .msg.bot { background: #131314; color: #A8C7FA; }
+
+        .input-group { display: flex; gap: 8px; }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 20px;
+            border: 1px solid #37393B;
+            background: #131314;
+            color: #FFF;
+        }
+        .send-btn {
+            background: #A8C7FA;
+            color: #001D3D;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div style="font-size: 3rem; margin-bottom: 10px;">✨</div>
+        <h1>Bitmo AI</h1>
+        <p>Click below to launch the Python AI engine right in your browser!</p>
+
+        <button class="btn-run" id="launch-btn" onclick="launchBitmo()">
+            ▶ Run Bitmo AI
+        </button>
+
+        <div id="chat-container">
+            <div id="chat-box">
+                <div class="msg bot"><strong>Bitmo:</strong> Hello! 👋 How can I help you today?</div>
+            </div>
+            <div class="input-group">
+                <input type="text" id="user-input" placeholder="Ask Bitmo anything...">
+                <button class="send-btn" id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function launchBitmo() {
+            document.getElementById('launch-btn').style.display = 'none';
+            document.getElementById('chat-container').style.display = 'block';
+        }
+    </script>
+
+    <!-- Python execution directly in Chrome -->
+    <script type="py" config='{"packages": ["google-genai"]}'>
+        from pyscript import Element, window
+        from google import genai
+
+        API_KEY = "AQ.Ab8RN6IW5S6tcH7ueDYzMPuEDsVleWISwXWHLoNrSSmczo6QrA"
+        client = genai.Client(api_key=API_KEY)
+
+        async def send_message(event):
+            user_input = Element("user-input").element.value.strip()
+            if not user_input:
+                return
+            
+            chat_box = Element("chat-box").element
+            chat_box.innerHTML += f'<div class="msg user"><strong>You:</strong> {user_input}</div>'
+            Element("user-input").element.value = ""
+
+            try:
+                response = client.models.generate_content(
+                    model="gemini-3.6-flash",
+                    contents=user_input
+                )
+                chat_box.innerHTML += f'<div class="msg bot"><strong>Bitmo:</strong> {response.text}</div>'
+            except Exception as e:
+                chat_box.innerHTML += f'<div class="msg bot"><strong>Error:</strong> {str(e)}</div>'
+            
+            chat_box.scrollTop = chat_box.scrollHeight
+
+        Element("send-btn").element.onclick = send_message
+    </script>
+
+</body>
+</html>
