@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitmo AI</title>
+    
+    <!-- PyScript Engine -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #131314;
+            color: #FFFFFF;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 1. LEFT SIDEBAR */
+        .sidebar {
+            width: 240px;
+            background-color: #1E1F20;
+            display: flex;
+            flex-direction: column;
+            padding: 20px 15px;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #A8C7FA;
+            margin-bottom: 20px;
+            padding-left: 5px;
+        }
+
+        .new-chat-btn {
+            background-color: #2B2C2E;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+            margin-bottom: 25px;
+        }
+
+        .new-chat-btn:hover { background-color: #37393B; }
+
+        .history-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #8E918F;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding-left: 5px;
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-item {
+            background: transparent;
+            color: #C4C7C5;
+            border: none;
+            text-align: left;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-item:hover { background-color: #2B2C2E; }
+
+        /* 2. MAIN CHAT CONTAINER */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 950px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-scroll {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* 3. CHAT BUBBLES */
+        .bubble-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+
+        .bubble-wrapper.user { align-self: flex-end; }
+        .bubble-wrapper.bot { align-self: flex-start; }
+
+        .msg-frame {
+            border-radius: 16px;
+            padding: 12px 16px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+
+        .user .msg-frame { background-color: #2B2C2E; color: #FFFFFF; }
+        .bot .msg-frame { background-color: #1E1F20; color: #FFFFFF; }
+
+        .sender-lbl {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #8E918F;
+            margin-bottom: 4px;
+        }
+
+        .speak-btn {
+            margin-top: 8px;
+            background-color: #2B2C2E;
+            color: #A8C7FA;
+            border: none;
+            border-radius: 12px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+
+        .speak-btn:hover { background-color: #37393B; }
+
+        /* 4. BOTTOM INPUT BAR */
+        .input-frame {
+            background-color: #1E1F20;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            padding: 6px 10px 6px 20px;
+            height: 50px;
+        }
+
+        .prompt-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #FFFFFF;
+            font-size: 0.95rem;
+        }
+
+        .send-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 18px;
+            background-color: #A8C7FA;
+            color: #003062;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .send-button:hover { background-color: #7CACC5; }
+    </style>
+</head>
+<body>
+
+    <!-- LEFT SIDEBAR -->
+    <div class="sidebar">
+        <div class="logo">✨ Bitmo AI</div>
+        <button class="new-chat-btn" id="new-chat-btn">➕ New Chat</button>
+        <div class="history-title">Recent Chats</div>
+        <div class="history-list" id="history-scroll"></div>
+    </div>
+
+    <!-- MAIN CHAT AREA -->
+    <div class="chat-container">
+        <div class="chat-scroll" id="chat-scroll">
+            <div class="bubble-wrapper bot">
+                <div class="sender-lbl">Bitmo</div>
+                <div class="msg-frame">Hello! 👋 I'm Bitmo. Ask me anything!</div>
+            </div>
+        </div>
+
+        <div class="input-frame">
+            <input type="text" id="prompt-input" class="prompt-input" placeholder="Enter a prompt here..." autocomplete="off">
+            <button class="send-button" id="send-button">➔</button>
+        </div>
+    </div>
+
+    <!-- JavaScript helper for Speech Synthesis -->
+    <script>
+        function speakText(text) {
+            window.speechSynthesis.cancel();
+            const cleanText = text.replace(/\*\*/g, '');
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            window.speechSynthesis.speak(utterance);
+        }
+    </script>
+
+    <!-- PyScript Python Execution Engine -->
+    <script type="py" config='{"packages": ["google-genai"]}'>
+        import asyncio
+        import datetime
+        import re
+        from pyscript import Element, window
+        from google import genai
+        from google.genai import types
+
+        API_KEY = "AQ.Ab8RN6IW5S6tcH7ueDYzMPuEDsVleWISwXWHLoNrSSmczo6QrA"
+        client = genai.Client(api_key=API_KEY)
+
+        chat_scroll = Element("chat-scroll").element
+        history_scroll = Element("history-scroll").element
+        prompt_input = Element("prompt-input").element
+
+        chat_history_count = 0
+
+        def render_bubble(sender, text):
+            is_user = sender == "You"
+            wrapper = window.document.createElement("div")
+            wrapper.className = f"bubble-wrapper {'user' if is_user else 'bot'}"
+
+            sender_div = window.document.createElement("div")
+            sender_div.className = "sender-lbl"
+            sender_div.innerText = sender
+            wrapper.appendChild(sender_div)
+
+            cleaned_text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
+            msg_div = window.document.createElement("div")
+            msg_div.className = "msg-frame"
+            msg_div.innerText = cleaned_text
+            wrapper.appendChild(msg_div)
+
+            if not is_user:
+                speak_btn = window.document.createElement("button")
+                speak_btn.className = "speak-btn"
+                speak_btn.innerText = "🔊 Speak"
+                speak_btn.onclick = lambda e: window.speakText(cleaned_text)
+                wrapper.appendChild(speak_btn)
+
+            chat_scroll.appendChild(wrapper)
+            chat_scroll.scrollTop = chat_scroll.scrollHeight
+
+        def start_new_chat(event=None):
+            global chat_history_count
+            chat_scroll.innerHTML = ""
+            chat_history_count = 0
+            render_bubble("Bitmo", "Hello! 👋 I'm Bitmo. Ask me anything!")
+
+        async def process_message(user_text):
+            global chat_history_count
+
+            loading_wrapper = window.document.createElement("div")
+            loading_wrapper.className = "bubble-wrapper bot"
+            loading_wrapper.innerHTML = '<div class="sender-lbl">Bitmo</div><div class="msg-frame" style="font-style: italic; color: #8E918F;">Bitmo is searching the web... 🔍</div>'
+            chat_scroll.appendChild(loading_wrapper)
+            chat_scroll.scrollTop = chat_scroll.scrollHeight
+
+            current_date = datetime.date.today().strftime("%B %d, %Y")
+            system_prompt = f"Today's date is {current_date}. The current year is 2026. Always search the web dynamically to retrieve accurate real-time factual information."
+
+            config_with_search = types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                tools=[{"google_search": {}}]
+            )
+
+            try:
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=user_text,
+                    config=config_with_search
+                )
+                chat_scroll.removeChild(loading_wrapper)
+                render_bubble("Bitmo", response.text)
+
+                if chat_history_count == 0:
+                    chat_title = user_text[:18] + "..." if len(user_text) > 18 else user_text
+                    hist_btn = window.document.createElement("button")
+                    hist_btn.className = "history-item"
+                    hist_btn.innerText = f"💬 {chat_title}"
+                    history_scroll.appendChild(hist_btn)
+                    chat_history_count += 1
+
+            except Exception as e:
+                chat_scroll.removeChild(loading_wrapper)
+                render_bubble("Bitmo", f"Error: {str(e)}")
+
+        def trigger_send(event=None):
+            user_text = prompt_input.value.strip()
+            if not user_text:
+                return
+
+            render_bubble("You", user_text)
+            prompt_input.value = ""
+
+            asyncio.create_task(process_message(user_text))
+
+        def handle_keypress(event):
+            if event.key == "Enter":
+                trigger_send()
+
+        prompt_input.onkeypress = handle_keypress
+        Element("send-button").element.onclick = trigger_send
+        Element("new-chat-btn").element.onclick = start_new_chat
+    </script>
+</body>
+</html>
